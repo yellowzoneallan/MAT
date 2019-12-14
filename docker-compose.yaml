@@ -1,0 +1,83 @@
+version: "3"
+
+services:
+        # MQTT broker
+        broker:
+                container_name: broker
+                image: toke/mosquitto
+                ports:
+                        - "127.0.0.1:1883:1883/tcp"
+
+        # GPS coords source
+        source_gps:
+                container_name: source_gps
+                image: mclarenappliedtechnologies/recruitment.fanengagement.streamgenerator
+                links:
+                        - broker
+                env_file:
+                        - ./source_gps.env
+                        - ./mqtt.env
+                        - ./cars.env
+                ports:
+                        - "127.0.0.1:8081:8080/tcp"
+
+        # Write to websocket
+        mqtt_to_websocket:
+                container_name: mqtt-to-websocket
+                image: mclarenappliedtechnologies/recruitment.fanengagement.forwarder
+                links:
+                        - broker
+                env_file:
+                        - ./mqtt.env
+                ports:
+                        - "127.0.0.1:8080:8080/tcp"
+
+
+        # Webapp
+        webapp:
+                container_name: webapp
+                image: mclarenappliedtechnologies/recruitment.fanengagement.webapp
+                links:
+                        - mqtt_to_websocket
+                ports:
+                        - "127.0.0.1:8084:8084/tcp"
+
+        # redis cache
+        redis:
+                container_name: redis
+                image: bitnami/redis:5.0
+                environment:
+                        - ALLOW_EMPTY_PASSWORD=yes
+                env_file:
+                        - ./redis.env
+                ports:
+                        - "127.0.0.1:6379:6379/tcp"
+                  
+
+
+        # Mongo NoSql database
+        mongodb:
+                container_name: mongodb
+                image: mongo:latest
+                environment:
+                        - MONGO_DATA_DIR=/data/db
+                        - MONGO_LOG_DIR=/dev/null
+                          # - MONGODB_USER="user"
+                          #- MONGODB_PASS="password"
+                        - CASSANDRA_SEEDS=cassandra11
+                volumes:
+                        - ./data/db:/data/db
+                ports:
+                        - "127.0.0.1:27017:27017/tcp"
+
+        # Allan's App MAT-python-v1
+        mat-python-v1:
+                container_name: mat-python-v1
+                image: mat-python-v1
+                links:
+                        - broker
+                        - mongodb
+                        - redis
+                ports:
+                        - "127.0.0.1:5555:5555/tcp"
+
