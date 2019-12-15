@@ -7,10 +7,6 @@ from geopy.distance import geodesic # add gps tools
 from datetime import datetime # add timestamp tools
 import time # add time tools
 import redis  # add redis tools
-from cassandra import ConsistencyLevel # add cassandra HA tools
-from cassandra.query import SimpleStatement # add cassandra HA tools
-from cassandra.cluster import Cluster # add cassandra HA tools
-from cassandra.policies import DCAwareRoundRobinPolicy # add cassandra HA tools
 cars_in_race = 6 # reduce the hardcoding, revisit positions list
 import pymongo
 import urllib.parse
