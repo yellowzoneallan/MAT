@@ -26,7 +26,7 @@ newtimestamp = float(datetime.timestamp(now) / 1000.0) # get current timestamp -
 tracklat = 52.06813447551777 # random point on track - eventually startline - redis
 tracklong = -1.023626530253432431 # random point on track - eventually startline -redis
 totaldistance = 0 # setup empty distance - redis
-r = redis.Redis() # initialise the redis cache
+r = redis.Redis(host="redis") # initialise the redis cache
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -149,8 +149,8 @@ def on_message(client, userdata, message):
     print(speedmessage)
 
 
-
-myclient = pymongo.MongoClient('mongodb://localhost:27017/') # mongo connection
+myclient = pymongo.MongoClient('mongodb', 27017) # mongo connection
+# myclient = pymongo.MongoClient('mongodb://localhost:27017') # mongo connection
 mydb = myclient['telemetry'] # mongo database name
 mycol = mydb["cardata"] # mongo table name
 
@@ -162,11 +162,11 @@ for startrace in range(cars_in_race):  # redis initialise
 
 # client_name = os.system("hostname")  # to get the hostname
 Connected = False   #global variable for the state of the connection
-broker_address= "localhost" # mqtt broker details
+broker_address= "broker" # mqtt broker details
 client = mqttClient.Client("allanpythoncode")  # mqtt client - unique name / instance
 client.on_connect= on_connect  # attach function to callback
 client.on_message= on_message # attach function to callback
-client.connect("localhost") # connect to mqtt broker
+client.connect("brokerl") # connect to mqtt broker
 client.loop_start() # start the loop
 while Connected != True: # Wait for connection
     time.sleep(0.1)

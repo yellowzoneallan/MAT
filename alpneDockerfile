@@ -1,0 +1,12 @@
+FROM python:alpine3.7
+RUN apk add mosquitto
+RUN apk add mosquitto-clients
+RUN pip3 install paho-mqtt
+RUN pip3 install geopy
+RUN pip3 install redis
+RUN pip3 install pymongo
+COPY . /app
+WORKDIR /app
+RUN pip3 install -r requirements.txt
+EXPOSE 5555
+CMD python ./MAT-python-v1.py

@@ -3,7 +3,9 @@ RUN apt-get update -y
 RUN apt-get install -y mosquitto
 RUN apt-get install -y mosquitto-clients
 RUN apt-get install -y python3-pip
-RUN apt install -y mongodb-clients
+RUN apt-get install -y mongodb-clients
+RUN apt-get install -y curl
+RUN apt-get install -y net-tools
 RUN pip3 install paho-mqtt
 RUN pip3 install geopy
 RUN pip3 install redis
