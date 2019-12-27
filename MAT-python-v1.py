@@ -166,7 +166,7 @@ broker_address= "broker" # mqtt broker details
 client = mqttClient.Client("allanpythoncode")  # mqtt client - unique name / instance
 client.on_connect= on_connect  # attach function to callback
 client.on_message= on_message # attach function to callback
-client.connect("brokerl") # connect to mqtt broker
+client.connect("broker") # connect to mqtt broker
 client.loop_start() # start the loop
 while Connected != True: # Wait for connection
     time.sleep(0.1)
