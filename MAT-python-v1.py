@@ -134,7 +134,7 @@ def print_all_values(): # diagnostic tests - use "sudo docker-compose logs" to s
 
 def on_message(client, userdata, message):
     # print("Message received: ",  message.payload)
-    redis_print_alldata()
+    # redis_print_alldata()
     cardata = json.loads(message.payload) # convert current message from JSON
     mydict = { "carIndex": (cardata["carIndex"]), "latitude": (cardata["location"].get("lat")), "longitude": (cardata["location"].get("long")), "timestamp": (cardata["timestamp"])} # convert message to mongo schema
     x = mycol.insert_one(mydict) # write message to mondo db
@@ -144,7 +144,7 @@ def on_message(client, userdata, message):
     tracklong = float(float(cardata["location"].get("long"))) # extract currrent gps
     trackgps = (float(cardata["location"].get("lat")),float(cardata["location"].get("long"))) # extract currrent gps
     oldinfo = redis_get_car(rediscar) # obtain last saved data for current car
-    print(oldinfo, rediscar, carno, "fetched oldinfo from redis, rediscar, carno")
+    # print(oldinfo, rediscar, carno, "fetched oldinfo from redis, rediscar, carno")
     oldgps = (rediscar[2], rediscar[4]) # last known gps for current car
     olddistance = rediscar[3] # last known total distance for current car
     oldtimestamp = rediscar[1] # last known timestamp for current car
@@ -155,20 +155,23 @@ def on_message(client, userdata, message):
     totaldistance = olddistance + tripdistance # calculate new total race distance
     timediffmicro = timedifference.microseconds # convert time delta to micro s
     speed = (tripdistance * 1000000 * 3600 / timediffmicro) # calculate current speed
-    print("------------- Values in memory ----------- ")
-    print("Current Message received: ",  message.payload)
-    print("GPS Data: trackgps: ", trackgps, " tracklat: ", tracklat, " tracklong: ", tracklong, " oldgps: ", oldgps)
-    print("Distance: total: ", totaldistance, " trip: ", tripdistance, " original: ", olddistance)
-    print("Time: delta: ", timedifference, " newdate: ", newdate, " olddate: ", olddate, " newtimestamp: ", newtimestamp, " original: ", oldtimestamp)
-    print("------------------------------------------ ")
+    # print("------------- Values in memory ----------- ")
+    # print("Current Message received: ",  message.payload)
+    # print("GPS Data: trackgps: ", trackgps, " tracklat: ", tracklat, " tracklong: ", tracklong, " oldgps: ", oldgps)
+    # print("Distance: total: ", totaldistance, " trip: ", tripdistance, " original: ", olddistance)
+    # print("Time: delta: ", timedifference, " newdate: ", newdate, " olddate: ", olddate, " newtimestamp: ", newtimestamp, " original: ", oldtimestamp)
+    # print("------------------------------------------ ")
     # print_all_values()
     newinfo = [carno,newtimestamp,trackgps,totaldistance] # prep current values for saving
     if carno == 0:
-        print("========== Car 0 Processing ==============")
-        redis_get_positions(oldpositions)
+        # print("========== Car 0 Processing ==============")
+        # redis_get_positions(oldpositions)
         # racedistance = positions
-        redis_get_racedistance(racedistance)
-        print(positions, oldpositions, racedistance, "positions, old positions, racedistance")
+        # redis_get_racedistance(racedistance)
+        oldpositions = [int(r.get("position0")), int(r.get("position1")), int(r.get("position2")), int(r.get("position3")), int(r.get("position4")), int(r.get("position5"))]
+        racedistance = [float(r.get("totaldistance0")), float(r.get("totaldistance1")), float(r.get("totaldistance2")), float(r.get("totaldistance3")), float(r.get("totaldistance4")), float(r.get("totaldistance5")), ]
+        positions = oldpositions
+        # print(positions, oldpositions, racedistance, "positions, old positions, racedistance")
         leaderdistance = sorted(racedistance, key=float, reverse=True) # order total distance
         for raceorder in range(cars_in_race): # revisit in case more efficient mthond
             for distances in range(cars_in_race):
@@ -179,17 +182,20 @@ def on_message(client, userdata, message):
             positionmessage = json.dumps(positiondata) # convert into JSON:
             client.publish("carStatus", positionmessage) # send mqtt message
             print(positionmessage)
+        r.mset({"position0": positions[0], "position1": positions[1], "position2": positions[2], "position3": positions[3], "position4": positions[4], "position5": positions[5]})
         if positions != oldpositions: # check for overtakes
             eventdata = {"timestamp": int(newtimestamp * 1000), "text": "overtake detected"} # prep event message
             eventmessage = json.dumps(eventdata) # convert into JSON:
             client.publish("events", eventmessage) # send mqtt message
-            redis_put_positions(positions) # update positions in redis
-            print(eventmessage)
-        print("==============================================")
+            print("%%%%%%%%%%% NEW POSTIONS %%%%%%%%%%%%%%%%% ", positions)
+            # redis_put_positions(positions) # update positions in redis
+            # r.mset({"position0": positions[0], "position1": positions[1], "position2": positions[2], "position3": positions[3], "position4": positions[4], "position5": positions5]})
+            # print(eventmessage)
+        # print("==============================================")
 
     # redis_put_cardata(carno) # save updated data for current car
-    print("********** Redis Put Car Data Function Call *******************")
-    print("Car No", carno, "timestamp", newtimestamp, "lat", tracklat, "long", tracklong, "totaldist", totaldistance)
+    # print("********** Redis Put Car Data Function Call *******************")
+    # print("Car No", carno, "timestamp", newtimestamp, "lat", tracklat, "long", tracklong, "totaldist", totaldistance)
     if carno == 0:
         r.mset({"timestamp0": newtimestamp, "lat0": tracklat, "long0": tracklong, "totaldistance0": totaldistance})
     if carno == 1:
