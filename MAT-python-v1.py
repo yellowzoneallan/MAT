@@ -36,6 +36,18 @@ def on_connect(client, userdata, flags, rc):
     else:
         print("Connection failed")
 
+def redis_print_alldata(): # print all data from redis cache
+    print("************ Redis Dump ****************")
+    print("Positions", int(r.get("position0")), int(r.get("position1")), int(r.get("position2")), int(r.get("position3")), int(r.get("position4")), int(r.get("position5")))
+    print("Car 0 ", float(r.get("timestamp0")), float(r.get("lat0")), float(r.get("totaldistance0")), float(r.get("long0")))
+    print("Car 1 ", float(r.get("timestamp1")), float(r.get("lat1")), float(r.get("totaldistance1")), float(r.get("long1")))
+    print("Car 2 ", float(r.get("timestamp2")), float(r.get("lat2")), float(r.get("totaldistance2")), float(r.get("long2")))
+    print("Car 3 ", float(r.get("timestamp3")), float(r.get("lat3")), float(r.get("totaldistance3")), float(r.get("long3")))
+    print("Car 4 ", float(r.get("timestamp4")), float(r.get("lat4")), float(r.get("totaldistance4")), float(r.get("long4")))
+    print("Car 5 ", float(r.get("timestamp5")), float(r.get("lat5")), float(r.get("totaldistance5")), float(r.get("long5")))
+    print("************ Redis Dump ****************")
+
+
 def redis_get_positions(fname): # fetch position data from redis cache
   fname[0] = int(r.get("position0"))
   fname[1] = int(r.get("position1"))
@@ -44,22 +56,32 @@ def redis_get_positions(fname): # fetch position data from redis cache
   fname[4] = int(r.get("position4"))
   fname[5] = int(r.get("position5"))
 
+def redis_get_racedistance(fname): # fetch position data from redis cache
+  fname[0] = int(r.get("totaldistance0"))
+  fname[1] = int(r.get("totaldistance1"))
+  fname[2] = int(r.get("totaldistance2"))
+  fname[3] = int(r.get("totaldistance3"))
+  fname[4] = int(r.get("totaldistance4"))
+  fname[5] = int(r.get("totaldistance5"))
+
 def redis_put_positions(fname):# update position data to redis cache
-  r.mset({"position0": positions[0], "position1": fname[1], "position2": fname[2], "position3": fname[3], "position4": fname[4], "position5": fname[5]})
+  r.mset({"position0": fname[0], "position1": fname[1], "position2": fname[2], "position3": fname[3], "position4": fname[4], "position5": fname[5]})
 
 def redis_put_cardata(fname):# update car data to redis cache
-  if fname == 0:
-      r.mset({"timestamp0": newtimestamp, "lat0": tracklat, "long0": tracklong, "totaldistance0": totaldistance})
-  if fname == 1:
-      r.mset({"timestamp1": newtimestamp, "lat1": tracklat, "long1": tracklong, "totaldistance1": totaldistance})
-  if fname == 2:
-      r.mset({"timestamp2": newtimestamp, "lat2": tracklat, "long2": tracklong, "totaldistance2": totaldistance})
-  if fname == 3:
-      r.mset({"timestamp3": newtimestamp, "lat3": tracklat, "long3": tracklong, "totaldistance3": totaldistance})
-  if fname == 4:
-      r.mset({"timestamp4": newtimestamp, "lat4": tracklat, "long4": tracklong, "totaldistance4": totaldistance})
-  if fname == 5:
-      r.mset({"timestamp5": newtimestamp, "lat5": tracklat, "long5": tracklong, "totaldistance5": totaldistance})
+    print("********** Redis Put Car Data Function Call *******************")
+    print("Car No", fname, "timestamp", newtimestamp, "lat", tracklat, "long", tracklong, "totaldist", totaldistance)
+    if fname == 0:
+        r.mset({"timestamp0": newtimestamp, "lat0": tracklat, "long0": tracklong, "totaldistance0": totaldistance})
+    if fname == 1:
+        r.mset({"timestamp1": newtimestamp, "lat1": tracklat, "long1": tracklong, "totaldistance1": totaldistance})
+    if fname == 2:
+        r.mset({"timestamp2": newtimestamp, "lat2": tracklat, "long2": tracklong, "totaldistance2": totaldistance})
+    if fname == 3:
+        r.mset({"timestamp3": newtimestamp, "lat3": tracklat, "long3": tracklong, "totaldistance3": totaldistance})
+    if fname == 4:
+        r.mset({"timestamp4": newtimestamp, "lat4": tracklat, "long4": tracklong, "totaldistance4": totaldistance})
+    if fname == 5:
+        r.mset({"timestamp5": newtimestamp, "lat5": tracklat, "long5": tracklong, "totaldistance5": totaldistance})
 
 def redis_get_car(fname): # car data from redis cache
   if carno == 0:
@@ -99,8 +121,20 @@ def redis_get_car(fname): # car data from redis cache
       fname[3] = float(r.get("totaldistance5"))
       fname[4] = float(r.get("long5"))
 
+def print_all_values(): # diagnostic tests - use "sudo docker-compose logs" to see output
+    global message, trackgps, tracklat, tracklong, oldgps, totaldistance, tripdistance, olddistance, timedifference, newdate, olddate, newtimestamp, oldtimestamp
+    print("------------- Values in memory ----------- ")
+    print("Current Message received: ",  message.payload)
+    print("GPS Data: trackgps: ", trackgps, " tracklat: ", tracklat, " tracklong: ", tracklong, " oldgps: ", oldgps)
+    print("Distance: total: ", totaldistance, " trip: ", tripdistance, " original: ", olddistance)
+    print("Time: delta: ", timedifference, " newdate: ", newdate, " olddate: ", olddate, " newtimestamp: ", newtimestamp, " original: ", oldtimestamp)
+    print("------------------------------------------ ")
+
+
+
 def on_message(client, userdata, message):
-    print("Message received: ",  message.payload)
+    # print("Message received: ",  message.payload)
+    redis_print_alldata()
     cardata = json.loads(message.payload) # convert current message from JSON
     mydict = { "carIndex": (cardata["carIndex"]), "latitude": (cardata["location"].get("lat")), "longitude": (cardata["location"].get("long")), "timestamp": (cardata["timestamp"])} # convert message to mongo schema
     x = mycol.insert_one(mydict) # write message to mondo db
@@ -110,7 +144,7 @@ def on_message(client, userdata, message):
     tracklong = float(float(cardata["location"].get("long"))) # extract currrent gps
     trackgps = (float(cardata["location"].get("lat")),float(cardata["location"].get("long"))) # extract currrent gps
     oldinfo = redis_get_car(rediscar) # obtain last saved data for current car
-    # print(oldinfo, rediscar, carno, "fetched oldinfo from redis, rediscar, carno")
+    print(oldinfo, rediscar, carno, "fetched oldinfo from redis, rediscar, carno")
     oldgps = (rediscar[2], rediscar[4]) # last known gps for current car
     olddistance = rediscar[3] # last known total distance for current car
     oldtimestamp = rediscar[1] # last known timestamp for current car
@@ -121,11 +155,20 @@ def on_message(client, userdata, message):
     totaldistance = olddistance + tripdistance # calculate new total race distance
     timediffmicro = timedifference.microseconds # convert time delta to micro s
     speed = (tripdistance * 1000000 * 3600 / timediffmicro) # calculate current speed
+    print("------------- Values in memory ----------- ")
+    print("Current Message received: ",  message.payload)
+    print("GPS Data: trackgps: ", trackgps, " tracklat: ", tracklat, " tracklong: ", tracklong, " oldgps: ", oldgps)
+    print("Distance: total: ", totaldistance, " trip: ", tripdistance, " original: ", olddistance)
+    print("Time: delta: ", timedifference, " newdate: ", newdate, " olddate: ", olddate, " newtimestamp: ", newtimestamp, " original: ", oldtimestamp)
+    print("------------------------------------------ ")
+    # print_all_values()
     newinfo = [carno,newtimestamp,trackgps,totaldistance] # prep current values for saving
     if carno == 0:
-        redis_get_positions(positions)
-        racedistance = positions
-        print(positions)
+        print("========== Car 0 Processing ==============")
+        redis_get_positions(oldpositions)
+        # racedistance = positions
+        redis_get_racedistance(racedistance)
+        print(positions, oldpositions, racedistance, "positions, old positions, racedistance")
         leaderdistance = sorted(racedistance, key=float, reverse=True) # order total distance
         for raceorder in range(cars_in_race): # revisit in case more efficient mthond
             for distances in range(cars_in_race):
@@ -142,7 +185,24 @@ def on_message(client, userdata, message):
             client.publish("events", eventmessage) # send mqtt message
             redis_put_positions(positions) # update positions in redis
             print(eventmessage)
-    redis_put_cardata(carno) # save updated data for current car
+        print("==============================================")
+
+    # redis_put_cardata(carno) # save updated data for current car
+    print("********** Redis Put Car Data Function Call *******************")
+    print("Car No", carno, "timestamp", newtimestamp, "lat", tracklat, "long", tracklong, "totaldist", totaldistance)
+    if carno == 0:
+        r.mset({"timestamp0": newtimestamp, "lat0": tracklat, "long0": tracklong, "totaldistance0": totaldistance})
+    if carno == 1:
+        r.mset({"timestamp1": newtimestamp, "lat1": tracklat, "long1": tracklong, "totaldistance1": totaldistance})
+    if carno == 2:
+        r.mset({"timestamp2": newtimestamp, "lat2": tracklat, "long2": tracklong, "totaldistance2": totaldistance})
+    if carno == 3:
+        r.mset({"timestamp3": newtimestamp, "lat3": tracklat, "long3": tracklong, "totaldistance3": totaldistance})
+    if carno == 4:
+        r.mset({"timestamp4": newtimestamp, "lat4": tracklat, "long4": tracklong, "totaldistance4": totaldistance})
+    if carno == 5:
+        r.mset({"timestamp5": newtimestamp, "lat5": tracklat, "long5": tracklong, "totaldistance5": totaldistance})
+
     speeddata = {"timestamp": int(newtimestamp * 1000), "carIndex": carno, "type": "SPEED", "value": int(speed)} # prep speed message
     speedmessage = json.dumps(speeddata) # convert into JSON:
     client.publish("carStatus", speedmessage) # send mqtt message
@@ -163,7 +223,8 @@ for startrace in range(cars_in_race):  # redis initialise
 # client_name = os.system("hostname")  # to get the hostname
 Connected = False   #global variable for the state of the connection
 broker_address= "broker" # mqtt broker details
-client = mqttClient.Client("allanpythoncode")  # mqtt client - unique name / instance
+client = mqttClient.Client("allanpythoncode" + os.getenv('HOSTNAME'))  # mqtt client - unique name / instance
+print(client)
 client.on_connect= on_connect  # attach function to callback
 client.on_message= on_message # attach function to callback
 client.connect("broker") # connect to mqtt broker
